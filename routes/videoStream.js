@@ -6,6 +6,7 @@ const users = {};
 module.exports = function (io) {
     io.on('connection', socket => {
         if (!users[socket.id]) {
+            console.log('NEW USER! ' + socket.id);
             users[socket.id] = socket.id;
         }
         socket.emit("yourID", socket.id);
