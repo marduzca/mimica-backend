@@ -9,18 +9,18 @@ module.exports = function (io) {
             console.log('ON CONNECTION ' + socket.id);
             users[socket.id] = socket.id;
         }
-        console.log('BREAKPOINT 1, USERS: ' + users);
+        console.log('BREAKPOINT 1, USERS: ' + JSON.stringify(users));
 
         socket.emit("yourID", socket.id);
         io.sockets.emit("allUsers", users);
-        console.log('BREAKPOINT 2, USERS: ' + users);
+        console.log('BREAKPOINT 2, USERS: ' + JSON.stringify(users));
 
         socket.on('disconnect', () => {
             console.log('ON disconnect ');
             delete users[socket.id];
         })
     
-        console.log('BREAKPOINT 3, USERS: ' + users);
+        console.log('BREAKPOINT 3, USERS: ' + JSON.stringify(users));
 
 
         socket.on("callUser", (data) => {
@@ -28,7 +28,7 @@ module.exports = function (io) {
             io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});
         })
     
-        console.log('BREAKPOINT 4, USERS: ' + users);
+        console.log('BREAKPOINT 4, USERS: ' + JSON.stringify(users));
 
 
         socket.on("acceptCall", (data) => {
@@ -36,7 +36,7 @@ module.exports = function (io) {
             io.to(data.to).emit('callAccepted', data.signal);
         })
 
-        console.log('BREAKPOINT 5, USERS: ' + users);
+        console.log('BREAKPOINT 5, USERS: ' + JSON.stringify(users));
 
     });
 
