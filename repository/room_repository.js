@@ -31,5 +31,16 @@ module.exports = {
         catch (err) {
             throw err;
         }
+    },
+
+    removePlayerFromRoom: async (roomID, playerID) => {
+        try {
+            await client.query(
+                `DELETE FROM ROOM_${roomID} ` +
+                'WHERE id=$1;', [playerID]);
+        }
+        catch (err) {
+            throw err;
+        }
     }
 }
