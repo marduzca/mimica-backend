@@ -11,7 +11,7 @@ app.io = require('socket.io')();
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const dummyRouter = require('./routes/dummy');
-const videoStreamRouter = require('./routes/videoStream')(app.io);
+const videoStreamRouter = require('./routes/video_stream')(app.io);
 
 app.use(cors());
 app.use(logger('dev'));
