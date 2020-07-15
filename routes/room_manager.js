@@ -2,38 +2,40 @@ const express = require('express');
 const router = express.Router();
 const roomRepository = require('../repository/room_repository');
 
-let players = [];
 const activeRooms = [];
-let currentRoom;
 
 module.exports = function (io) {
     io.on('connection', socket => {
-        socket.on('player', (player) => {
-            currentRoom = player.roomID;
+        socket.on('player', async (player) => {
             socket.join(player.roomID);
-
-            players.push({ name: player.name, room: currentRoom });
 
             if(activeRooms.includes(player.roomID)) {
                 roomRepository.addPlayerToRoom(player.roomID, player.id, player.name);
             }
             else {
-                roomRepository.createRoom(player.roomID, player.id, player.name);
+                await roomRepository.createRoom(player.roomID, player.id, player.name);
                 activeRooms.push(player.roomID);
             }
             
-            io.sockets.in(currentRoom).emit('allUsers', players.filter(player => player.room === currentRoom));
+            const currentPlayers = await roomRepository.getPlayersInRoom(player.roomID);
+            io.sockets.in(player.roomID).emit('allUsers', currentPlayers);
         })
 
         // if (!users[socket.id]) {
         //     users[socket.id] = socket.id;
         // }
 
-        console.log(players);
-        console.log(activeRooms);
+        socket.on('remove', async (player) => {
+            await roomRepository.assignNewHostIfNecessary(player.roomID, player.id);
 
-        socket.on('remove', (player) => {
             roomRepository.removePlayerFromRoom(player.roomID, player.id);
+
+            const currentPlayers = await roomRepository.getPlayersInRoom(player.roomID);
+            io.sockets.in(player.roomID).emit('allUsers', currentPlayers);
+
+            if(await roomRepository.isRoomEmpty(player.roomID)) {
+                roomRepository.closeRoom(player.roomID);
+            }
         })
 
         // socket.on('callUser', (data) => {
