@@ -22,6 +22,17 @@ module.exports = {
         }
     },
 
+    getPlayersInRoom: async (roomID) => {
+        try {
+            const players = await client.query(`SELECT name, host FROM ROOM_${roomID};`);
+
+            return players.rows;
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+
     addPlayerToRoom: async (roomID, playerID, playerName) => {
         try {
             await client.query(
@@ -37,7 +48,52 @@ module.exports = {
         try {
             await client.query(
                 `DELETE FROM ROOM_${roomID} ` +
-                'WHERE id=$1;', [playerID]);
+                'WHERE id = $1;', [playerID]);
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+
+    closeRoom: async (roomID) => {
+        try {
+            await client.query(`DROP TABLE ROOM_${roomID};`);
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+
+    isRoomEmpty: async (roomID) => {
+        try {
+            const isTableEmpty = await client.query(
+                'SELECT CASE ' +
+                `WHEN EXISTS (SELECT * FROM ROOM_${roomID} LIMIT 1) THEN FALSE ` +
+                'ELSE TRUE ' +
+                'END');
+
+            return isTableEmpty.rows[0].case;
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+
+    assignNewHostIfNecessary: async (roomID, playerID) => {
+        try {
+            const isHost = await client.query(
+                `SELECT host FROM ROOM_${roomID} ` +
+                'WHERE id = $1;', [playerID]
+            );
+
+            if (isHost.rows[0].host) {
+                await client.query(
+                    `UPDATE ROOM_${roomID} ` +
+                    'SET host = TRUE ' +
+                    'WHERE id = ' +
+                    `(SELECT id FROM ROOM_${roomID} WHERE id != $1 LIMIT 1 );`, [playerID]
+                );
+            }
         }
         catch (err) {
             throw err;
