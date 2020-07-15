@@ -1,42 +1,43 @@
 const express = require('express');
 const router = express.Router();
-const roomRepository = require('../repository/room_repository');
+const roomRepo = require('../repository/room_repository');
 
 const activeRooms = [];
 
 module.exports = function (io) {
     io.on('connection', socket => {
-        socket.on('player', async (player) => {
+
+        socket.on('newPlayer', async (player) => {
             socket.join(player.roomID);
 
-            if(activeRooms.includes(player.roomID)) {
-                roomRepository.addPlayerToRoom(player.roomID, player.id, player.name);
+            if (activeRooms.includes(player.roomID)) {
+                roomRepo.addPlayerToRoom(player.roomID, player.id, player.name);
             }
             else {
-                await roomRepository.createRoom(player.roomID, player.id, player.name);
+                await roomRepo.createRoom(player.roomID, player.id, player.name);
                 activeRooms.push(player.roomID);
             }
-            
-            const currentPlayers = await roomRepository.getPlayersInRoom(player.roomID);
-            io.sockets.in(player.roomID).emit('allUsers', currentPlayers);
-        })
+
+            const currentPlayers = await roomRepo.getPlayersInRoom(player.roomID);
+            io.sockets.in(player.roomID).emit('currentPlayers', currentPlayers);
+        });
+
+        socket.on('remove', async (player) => {
+            await roomRepo.assignNewHostIfNecessary(player.roomID, player.id);
+
+            roomRepo.removePlayerFromRoom(player.roomID, player.id);
+
+            const currentPlayers = await roomRepo.getPlayersInRoom(player.roomID);
+            io.sockets.in(player.roomID).emit('currentPlayers', currentPlayers);
+
+            if (await roomRepo.isRoomEmpty(player.roomID)) {
+                roomRepo.closeRoom(player.roomID);
+            }
+        });
 
         // if (!users[socket.id]) {
         //     users[socket.id] = socket.id;
         // }
-
-        socket.on('remove', async (player) => {
-            await roomRepository.assignNewHostIfNecessary(player.roomID, player.id);
-
-            roomRepository.removePlayerFromRoom(player.roomID, player.id);
-
-            const currentPlayers = await roomRepository.getPlayersInRoom(player.roomID);
-            io.sockets.in(player.roomID).emit('allUsers', currentPlayers);
-
-            if(await roomRepository.isRoomEmpty(player.roomID)) {
-                roomRepository.closeRoom(player.roomID);
-            }
-        })
 
         // socket.on('callUser', (data) => {
         //     io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});

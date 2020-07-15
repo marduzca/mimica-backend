@@ -22,6 +22,17 @@ module.exports = {
         }
     },
 
+    addPlayerToRoom: async (roomID, playerID, playerName) => {
+        try {
+            await client.query(
+                `INSERT INTO ROOM_${roomID} (host, id, name) ` +
+                'VALUES(FALSE, $1, $2);', [playerID, playerName]);
+        }
+        catch (err) {
+            throw err;
+        }
+    },
+    
     getPlayersInRoom: async (roomID) => {
         try {
             const players = await client.query(`SELECT name, host FROM ROOM_${roomID};`);
@@ -33,16 +44,6 @@ module.exports = {
         }
     },
 
-    addPlayerToRoom: async (roomID, playerID, playerName) => {
-        try {
-            await client.query(
-                `INSERT INTO ROOM_${roomID} (host, id, name) ` +
-                'VALUES(FALSE, $1, $2);', [playerID, playerName]);
-        }
-        catch (err) {
-            throw err;
-        }
-    },
 
     removePlayerFromRoom: async (roomID, playerID) => {
         try {
