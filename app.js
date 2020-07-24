@@ -10,7 +10,7 @@ app.io = require('socket.io')();
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const videoStreamRouter = require('./routes/room_manager')(app.io);
+const socketServer = require('./routes/socket_server')(app.io);
 
 app.use(cors());
 app.use(logger('dev'));
@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/stream', videoStreamRouter);
+app.use('/stream', socketServer);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
