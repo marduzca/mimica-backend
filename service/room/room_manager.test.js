@@ -1,7 +1,6 @@
 const roomManager = require('./room_manager');
 const roomRepo = require('../../repository/room_repository');
 const { Client } = require('pg');
-const { ExpectationFailed } = require('http-errors');
 
 jest.mock('pg', () => {
     const mockClient = {
