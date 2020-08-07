@@ -32,7 +32,7 @@ async function addPlayerToRoom(roomID, isHost, playerID, playerName) {
 
 async function getPlayersInRoom(roomID) {
     try {
-        const players = await client.query(`SELECT name, host FROM ROOM_${roomID};`);
+        const players = await client.query(`SELECT id, name, host FROM ROOM_${roomID};`);
 
         return players.rows;
     }
