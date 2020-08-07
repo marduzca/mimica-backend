@@ -17,9 +17,11 @@ module.exports = function (io) {
             const updatedPlayersList = await roomManager.removePlayer(player);
 
             io.sockets.in(player.roomID).emit('currentPlayers', updatedPlayersList);
-
         });
 
+        socket.on('startGame', (gameSettings) => {
+            io.sockets.in(gameSettings.roomID).emit('startGame', gameSettings);
+        });
         // if (!users[socket.id]) {
         //     users[socket.id] = socket.id;
         // }
