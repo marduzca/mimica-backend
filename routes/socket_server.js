@@ -1,10 +1,17 @@
 const express = require('express');
+let Peer = require('simple-peer')
+const wrtc=require('wrtc')
+
 const router = express.Router();
 const roomManager = require('../service/room/room_manager');
 
 const users = {};
 
 const socketToRoom = {};
+
+var Streamer={}
+var Receiver={}
+
 
 module.exports = function (io) {
     io.on('connection', socket => {
@@ -44,11 +51,11 @@ module.exports = function (io) {
         });
 
         socket.on("sending signal", payload => {
-            io.to(payload.userToSignal).emit('user joined', { signal: payload.signal, callerID: payload.callerID });
+            io.to(payload.userToSignal).emit('user joined', {signal: payload.signal, callerID: payload.callerID});
         });
 
         socket.on("returning signal", payload => {
-            io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
+            io.to(payload.callerID).emit('receiving returned signal', {signal: payload.signal, id: socket.id});
         });
 
         socket.on('disconnect', () => {
@@ -60,6 +67,63 @@ module.exports = function (io) {
             }
         });
 
+
+        socket.on('NewClientStreamer', function () {
+            socket.emit('CreateClientStreamerPeer')
+        })
+
+        function InitializeReceiver(offer) {
+            var receiver = {}
+            let peer = new Peer({
+                initiator: false,
+                // config: configuration,
+                // iceTransportPolicy: 'any',
+                wrtc: wrtc,
+                trickle: true
+            })
+            peer.on('signal', (data) => {
+                socket.emit('Answer', data)
+            })
+            peer.on('close', function () {
+                //
+            })
+            peer.on('stream', function (stream) {
+                receiver.stream = stream
+                receiver.peer = peer
+                Receiver = receiver
+            })
+            peer.signal(offer)
+        }
+
+        socket.on('Offer', function (offer) {
+            InitializeReceiver(offer)
+        })
+
+        socket.on('NewClientReceiver', function () {
+            var streamer = {}
+            streamer.gotAnswer = false
+            let peer = new Peer({
+                initiator: true,
+                // config: configuration,
+                // iceTransportPolicy: 'any',
+                wrtc: wrtc,
+                stream: Receiver.stream,
+                trickle: true
+            })
+            peer.on('signal', function (offer) {
+                if (!streamer.gotAnswer)
+                    socket.emit('Offer', offer)
+            })
+            peer.on('connect', function () {
+                Streamer = streamer
+            })
+            streamer.peer = peer
+
+            socket.on('ClientAnswer', function (data) {
+                streamer.gotAnswer = true
+                streamer.peer.signal(data)
+            })
+        })
     });
 
     return router;
