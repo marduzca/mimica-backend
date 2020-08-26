@@ -6,6 +6,10 @@ const users = {};
 
 const socketToRoom = {};
 
+let gameStarted = false;
+
+let usedSettings;
+
 module.exports = function (io) {
     io.on('connection', socket => {
 
@@ -15,15 +19,24 @@ module.exports = function (io) {
             const updatedPlayersList = await roomManager.addNewPlayer(player);
 
             io.sockets.in(player.roomID).emit('currentPlayers', updatedPlayersList);
+
+            if(gameStarted) {
+                io.sockets.in(player.roomID).emit('startGame', usedSettings);
+            }
         });
 
         socket.on('remove', async (player) => {
             const updatedPlayersList = await roomManager.removePlayer(player);
+            gameStarted = false;
+            console.log('LEAVING WITH ID ' + player.id)
 
+            io.sockets.in(player.roomID).emit('user left', player);
             io.sockets.in(player.roomID).emit('currentPlayers', updatedPlayersList);
         });
 
         socket.on('startGame', (gameSettings) => {
+            gameStarted = true;
+            usedSettings = gameSettings;
             io.sockets.in(gameSettings.roomID).emit('startGame', gameSettings);
         });
 
