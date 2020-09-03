@@ -1,4 +1,4 @@
-const { Client } = require('pg');
+const {Client} = require('pg');
 const client = new Client();
 client.connect();
 
@@ -12,8 +12,7 @@ async function createRoom(roomID, hostID, hostName) {
             'points INT DEFAULT 0, ' +
             'ranking INT DEFAULT 1 );'
         );
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -24,8 +23,7 @@ async function addPlayerToRoom(roomID, isHost, playerID, playerName) {
             `INSERT INTO ROOM_${roomID} (host, id, name) ` +
             'VALUES($1, $2, $3);', [isHost, playerID, playerName]
         );
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -35,8 +33,7 @@ async function getPlayersInRoom(roomID) {
         const players = await client.query(`SELECT id, name, host FROM ROOM_${roomID};`);
 
         return players.rows;
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -46,9 +43,8 @@ async function removePlayerFromRoom(roomID, playerID) {
         await client.query(
             `DELETE FROM ROOM_${roomID} ` +
             'WHERE id = $1;', [playerID]
-            );
-    }
-    catch (err) {
+        );
+    } catch (err) {
         throw err;
     }
 }
@@ -56,8 +52,7 @@ async function removePlayerFromRoom(roomID, playerID) {
 async function closeRoom(roomID) {
     try {
         await client.query(`DROP TABLE ROOM_${roomID};`);
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -69,11 +64,10 @@ async function isRoomEmpty(roomID) {
             `WHEN EXISTS (SELECT * FROM ROOM_${roomID} LIMIT 1) THEN FALSE ` +
             'ELSE TRUE ' +
             'END'
-            );
+        );
 
         return isTableEmpty.rows[0].case;
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -86,8 +80,7 @@ async function isRoomHost(roomID, playerID) {
         );
 
         return isHost.rows[0].host;
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }
@@ -100,8 +93,7 @@ async function reassignRoomHost(roomID, playerID) {
             'WHERE id = ' +
             `(SELECT id FROM ROOM_${roomID} WHERE id != $1 LIMIT 1 );`, [playerID]
         );
-    }
-    catch (err) {
+    } catch (err) {
         throw err;
     }
 }

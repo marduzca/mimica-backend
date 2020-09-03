@@ -5,8 +5,7 @@ const activeRooms = [];
 async function addNewPlayer(player) {
     if (activeRooms.includes(player.roomID)) {
         roomRepo.addPlayerToRoom(player.roomID, false, player.id, player.name);
-    }
-    else {
+    } else {
         roomRepo.createRoom(player.roomID);
         roomRepo.addPlayerToRoom(player.roomID, true, player.id, player.name);
         activeRooms.push(player.roomID);
@@ -22,8 +21,7 @@ async function removePlayer(player) {
 
     if (await roomRepo.isRoomEmpty(player.roomID)) {
         closeRoom(player.roomID);
-    }
-    else {
+    } else {
         return await roomRepo.getPlayersInRoom(player.roomID);
     }
 }
